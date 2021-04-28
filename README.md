@@ -12,6 +12,21 @@
 
 # Deployment steps
 
+Initialize terraform
+```
+terraform init
+```
+
+Apply changes
+```
+terraform apply
+```
+
+Destroy environment
+```
+terraform destroy
+```
+
 # Structure
 
-s
+
