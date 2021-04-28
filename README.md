@@ -7,8 +7,13 @@
 * Docker
 * kubectl
 * helm
-* PGO
+* PGO - CrunchyData postgres operator 
 
+# Structure
+
+`*.tf` - terraform files for GKE deployment
+`helm` - directory with helm charts used in installation
+`docker` - directory used to build container images
 
 # Deployment steps
 
@@ -28,9 +33,6 @@ Destroy environment
 ```
 terraform destroy
 ```
-
-# Structure
-
 
 # References
 
