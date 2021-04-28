@@ -33,3 +33,7 @@ variable "default_machine_type" {
 variable "pg_machine_type" {
   default = "n1-standard-1"
 }
+
+variable "gke_namespace" {
+  default = "pg"
+}

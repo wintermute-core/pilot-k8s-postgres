@@ -92,23 +92,55 @@ data "google_container_cluster" "gke" {
   location = var.gke_location
 }
 
+provider "kubernetes" {
+
+  host  = "https://${data.google_container_cluster.gke.endpoint}"
+  token = data.google_client_config.provider.access_token
+  cluster_ca_certificate = base64decode(
+    data.google_container_cluster.gke.master_auth[0].cluster_ca_certificate,
+  )
+
+}
+
 provider "helm" {
 
   kubernetes {
-    host             = "https://${data.google_container_cluster.gke.endpoint}"
-    token            = data.google_client_config.provider.access_token
+    host  = "https://${data.google_container_cluster.gke.endpoint}"
+    token = data.google_client_config.provider.access_token
     cluster_ca_certificate = base64decode(
       data.google_container_cluster.gke.master_auth[0].cluster_ca_certificate,
     )
   }
 }
 
+resource "kubernetes_namespace" "create_deploy_namespace" {
+  metadata {
+    annotations = {
+      name = var.gke_namespace
+    }
+
+    labels = {
+      applabel = var.gke_namespace
+    }
+
+    name = var.gke_namespace
+  }
+}
+
+data "kubernetes_namespace" "deploy_namespace" {
+  depends_on = [kubernetes_namespace.create_deploy_namespace]
+
+  metadata {
+    name = var.gke_namespace
+  }
+}
 
 resource "helm_release" "nginx" {
-  depends_on = [google_container_node_pool.pg_pool]
+  depends_on = [kubernetes_namespace.create_deploy_namespace]
 
-  repository = "https://charts.bitnami.com/bitnami"
-  name       = "nginx"
-  chart      = "nginx"
+  name      = "test-nginx"
+  chart     = "./charts/nginx"
+  namespace = data.kubernetes_namespace.deploy_namespace.metadata[0].name
+
 }
 
