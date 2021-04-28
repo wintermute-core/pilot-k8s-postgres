@@ -3,7 +3,7 @@ variable "name" {
 }
 
 variable "project" {
-  default = "universal-development-dev"
+  default = "gentle-cable-224311"
 }
 
 variable "region" {
@@ -14,12 +14,16 @@ variable "zone" {
   default = "us-central1-a"
 }
 
+variable "gke_location" {
+  default = "us-central1-a"
+}
+
 variable "default_node_count" {
-  default = 2
+  default = 1
 }
 
 variable "pg_node_count" {
-  default = 3
+  default = 1
 }
 
 variable "default_machine_type" {
