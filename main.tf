@@ -1,6 +1,5 @@
-
 locals {
-  gke_version = "1.18"
+  gke_version = "1.18.17-gke.1200"
 }
 
 provider "google" {
@@ -9,12 +8,13 @@ provider "google" {
   zone    = var.zone
 }
 
+
 resource "google_container_cluster" "gke" {
   name               = var.name
   project            = var.project
   description        = "GKE cluster for postgres deployment"
   min_master_version = local.gke_version
-  location           = var.region
+  location           = var.gke_location
 
   remove_default_node_pool = true
   initial_node_count       = 1
@@ -32,7 +32,7 @@ resource "google_container_cluster" "gke" {
 resource "google_container_node_pool" "default_pool" {
   name       = "${var.name}-default-pool"
   project    = var.project
-  location   = var.region
+  location   = var.gke_location
   cluster    = google_container_cluster.gke.name
   node_count = var.default_node_count
   version    = local.gke_version
@@ -60,7 +60,7 @@ resource "google_container_node_pool" "default_pool" {
 resource "google_container_node_pool" "pg_pool" {
   name       = "${var.name}-pg-pool"
   project    = var.project
-  location   = var.region
+  location   = var.gke_location
   cluster    = google_container_cluster.gke.name
   node_count = var.pg_node_count
   version    = local.gke_version
@@ -83,5 +83,32 @@ resource "google_container_node_pool" "pg_pool" {
       pool = "pg_pool"
     }
   }
+}
+
+data "google_client_config" "provider" {}
+
+data "google_container_cluster" "gke" {
+  name     = var.name
+  location = var.gke_location
+}
+
+provider "helm" {
+
+  kubernetes {
+    host             = "https://${data.google_container_cluster.gke.endpoint}"
+    token            = data.google_client_config.provider.access_token
+    cluster_ca_certificate = base64decode(
+      data.google_container_cluster.gke.master_auth[0].cluster_ca_certificate,
+    )
+  }
+}
+
+
+resource "helm_release" "nginx" {
+  depends_on = [google_container_node_pool.pg_pool]
+
+  repository = "https://charts.bitnami.com/bitnami"
+  name       = "nginx"
+  chart      = "nginx"
 }
 
