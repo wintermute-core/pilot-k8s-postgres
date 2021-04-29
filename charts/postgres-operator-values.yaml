@@ -2,3 +2,7 @@ name: "${name}"
 
 rbac:
     useClusterAdmin: true
+
+
+pgo_client_container_install: "true"
+pgo_cluster_admin: "true"
