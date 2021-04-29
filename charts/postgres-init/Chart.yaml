@@ -1,0 +1,9 @@
+apiVersion: v2
+name: postgres-init
+description: Postgresql database creation and initialization chart
+
+type: application
+
+version: 0.0.1
+
+appVersion: "0.0.1"

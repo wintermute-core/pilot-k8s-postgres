@@ -1,0 +1,75 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-db-creation
+  labels:
+    {{- include "postgres-init.labels" . | nindent 4 }}
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "postgres-init.serviceAccountName" . }}
+      containers:
+        - name: db-creation
+          image: {{ .Values.dbCreation.image.repository }}:{{ .Values.dbCreation.image.tag }}
+          imagePullPolicy: {{ .Values.dbCreation.image.pullPolicy }}
+          command:
+            - "bash"
+            - "-c"
+            - | 
+              set -eu -o pipefail
+              set -x
+
+              export DB_NS=pgo
+              export DB_CLUSRER_NAME=potato666
+              export DB_NAME=potato666
+              export DB_USER=potatouser
+              export DB_PW=potato123
+              export PG_REPLICAS=3
+              export PGBOUNCER_REPLICAS=2
+
+              function pgo_client_is_ready() {
+                kubectl -n pgo get pod -lname=pgo-client -ojson | jq '.items[].status | select(.containerStatuses != null) | .containerStatuses[] | select(.name=="pgo") | .ready' | grep --silent true
+              }
+
+              function wait_for_pgo_client_ready() {
+                time_left=600
+                until pgo_client_is_ready; do
+                  if [[ time_left -lt 0 ]]; then
+                    echo "pgo client not ready, timeout"
+                    exit 1
+                  fi
+                  time_left=$((time_left - 5))
+                  echo "waiting ${time_left} more for pgo client to become ready"
+                  sleep 5
+                done
+                echo "pgo client is ready"
+              }
+
+              function create_pgo_cluster() {
+                local cluster_test_result
+                cluster_test_result=$(kubectl -n pgo exec deploy/pgo-client -- pgo -n "${DB_NS}" test ${DB_CLUSRER_NAME})
+                if [[ "${cluster_test_result}" != "Nothing found." ]]; then
+                  echo "Cluster ${DB_CLUSRER_NAME} already exists"
+                  exit 0;
+                fi
+                resources_args="" #--cpu=1.0 --cpu-limit=1.0 --memory=1Gi --memory-limit=1Gi
+
+                kubectl -n pgo exec deploy/pgo-client -- pgo -n "${DB_NS}" create cluster ${DB_CLUSRER_NAME} \
+                  --replica-count=${PG_REPLICAS} --password-superuser="${DB_PW}" \
+                  --pgbouncer --pgbouncer-replicas=${PGBOUNCER_REPLICAS} \
+                  ${resources_args} \
+                  --metrics
+                echo "Cluster ${DB_CLUSRER_NAME} created"
+              }
+
+              wait_for_pgo_client_ready
+              create_pgo_cluster
+
+          resources:
+            {{- toYaml .Values.dbCreation.resources | nindent 12 }}
+      {{- with .Values.dbCreation.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

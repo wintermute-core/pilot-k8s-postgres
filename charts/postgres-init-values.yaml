@@ -1,0 +1,6 @@
+dbCreation:
+  image:
+    repository: "bitnami/kubectl"
+    tag: "1.17.17-debian-10-r98"
+    pullPolicy: IfNotPresent
+
