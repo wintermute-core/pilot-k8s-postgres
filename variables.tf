@@ -35,7 +35,7 @@ variable "pg_machine_type" {
 }
 
 variable "project_namespace" {
-  default = "gke-postgres"
+  default = "pgo"
 }
 
 

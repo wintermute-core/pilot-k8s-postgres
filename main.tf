@@ -145,24 +145,12 @@ resource "helm_release" "postgres_operator" {
 
 }
 
-resource "kubernetes_namespace" "create_project_namespace" {
-  metadata {
-    annotations = {
-      name = var.project_namespace
-    }
+resource "helm_release" "postgres_init" {
+  depends_on = [helm_release.postgres_operator]
 
-    labels = {
-      applabel = var.project_namespace
-    }
+  name      = "postgres-init"
+  chart     = "./charts/postgres-init"
+  namespace = var.project_namespace
+  values    = [templatefile("./charts/postgres-init-values.yaml", { name = var.name })]
 
-    name = var.project_namespace
-  }
-}
-
-data "kubernetes_namespace" "project_namespace" {
-  depends_on = [kubernetes_namespace.create_project_namespace]
-
-  metadata {
-    name = var.project_namespace
-  }
 }

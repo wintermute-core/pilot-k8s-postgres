@@ -43,11 +43,14 @@ After deployment, in namespace `pgo` will be deployed 2 pods:
 To interact wtih operator should be used client application `pgo` available in `pgo-client` pod or can be used from local(with port forwarding)
 
 ```
+
 pgo version
 
 pgo create cluster -n pgo potato
 
 pgo create cluster -n pgo tomato --replica-count=3 --password-superuser=potatoinc --pgbouncer --pgbouncer-replicas=3 --node-label pool=pg_pool
+
+pgo -n pgo delete cluster potato666
 
 ```
 
