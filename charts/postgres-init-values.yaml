@@ -4,3 +4,9 @@ dbCreation:
     tag: "1.17.17-debian-10-r98"
     pullPolicy: IfNotPresent
 
+
+dbInit:
+  image:
+    repository: "denis256/pg-client"
+    tag: "0.0.1"
+

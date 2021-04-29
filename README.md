@@ -13,7 +13,7 @@
 
 `*.tf` - terraform files for GKE deployment
 `charts` - directory with helm charts used in installation
-`docker` - directory used to build container images
+`containers` - directory used to build container images
 
 # Deployment steps
 
