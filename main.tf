@@ -88,12 +88,12 @@ resource "google_container_node_pool" "pg_pool" {
 data "google_client_config" "provider" {}
 
 data "google_container_cluster" "gke" {
-  name     = var.name
-  location = var.gke_location
+  depends_on = [google_container_node_pool.pg_pool]
+  name       = var.name
+  location   = var.gke_location
 }
 
 provider "kubernetes" {
-
   host  = "https://${data.google_container_cluster.gke.endpoint}"
   token = data.google_client_config.provider.access_token
   cluster_ca_certificate = base64decode(
@@ -113,34 +113,56 @@ provider "helm" {
   }
 }
 
-resource "kubernetes_namespace" "create_deploy_namespace" {
+resource "kubernetes_namespace" "create_operator_namespace" {
   metadata {
     annotations = {
-      name = var.gke_namespace
+      name = var.postgres_operator_namespace
     }
 
     labels = {
-      applabel = var.gke_namespace
+      applabel = var.postgres_operator_namespace
     }
 
-    name = var.gke_namespace
+    name = var.postgres_operator_namespace
   }
 }
 
-data "kubernetes_namespace" "deploy_namespace" {
-  depends_on = [kubernetes_namespace.create_deploy_namespace]
+data "kubernetes_namespace" "operator_namespace" {
+  depends_on = [kubernetes_namespace.create_operator_namespace]
 
   metadata {
-    name = var.gke_namespace
+    name = var.postgres_operator_namespace
   }
 }
 
-resource "helm_release" "nginx" {
-  depends_on = [kubernetes_namespace.create_deploy_namespace]
+resource "helm_release" "postgres_operator" {
+  depends_on = [kubernetes_namespace.create_operator_namespace]
 
-  name      = "test-nginx"
-  chart     = "./charts/nginx"
-  namespace = data.kubernetes_namespace.deploy_namespace.metadata[0].name
+  name      = "postgres-operator"
+  chart     = "./charts/postgres-operator"
+  namespace = data.kubernetes_namespace.operator_namespace.metadata[0].name
+  values    = [templatefile("./charts/postgres-operator-values.yaml", { name = var.name })]
 
 }
 
+resource "kubernetes_namespace" "create_project_namespace" {
+  metadata {
+    annotations = {
+      name = var.project_namespace
+    }
+
+    labels = {
+      applabel = var.project_namespace
+    }
+
+    name = var.project_namespace
+  }
+}
+
+data "kubernetes_namespace" "project_namespace" {
+  depends_on = [kubernetes_namespace.create_project_namespace]
+
+  metadata {
+    name = var.project_namespace
+  }
+}

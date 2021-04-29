@@ -3,7 +3,7 @@ variable "name" {
 }
 
 variable "project" {
-  default = "gentle-cable-224311"
+  default = "universal-development-dev"
 }
 
 variable "region" {
@@ -23,7 +23,7 @@ variable "default_node_count" {
 }
 
 variable "pg_node_count" {
-  default = 1
+  default = 2
 }
 
 variable "default_machine_type" {
@@ -34,6 +34,12 @@ variable "pg_machine_type" {
   default = "n1-standard-1"
 }
 
-variable "gke_namespace" {
-  default = "pg"
+variable "project_namespace" {
+  default = "gke-postgres"
 }
+
+
+variable "postgres_operator_namespace" {
+  default = "postgres-operator"
+}
+
