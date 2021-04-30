@@ -85,6 +85,14 @@ resource "google_container_node_pool" "pg_pool" {
   }
 }
 
+
+resource "null_resource" "fetch_cluster_details" {
+  depends_on = [google_container_node_pool.pg_pool]
+  provisioner "local-exec" {
+    command = "./scrips/container-config.sh ${var.name} ${var.zone} ${var.project}"
+  }
+}
+
 data "google_client_config" "provider" {}
 
 data "google_container_cluster" "gke" {
@@ -152,5 +160,23 @@ resource "helm_release" "postgres_init" {
   chart     = "./charts/postgres-init"
   namespace = var.project_namespace
   values    = [templatefile("./charts/postgres-init-values.yaml", { name = var.name })]
+
+}
+
+resource "null_resource" "gcp_account_secret" {
+  depends_on = [helm_release.postgres_init]
+  
+  provisioner "local-exec" {
+    command = "./scrips/load-default-secret.sh ${var.project_namespace}"
+  }
+}
+
+resource "helm_release" "postgres_toolbox" {
+  depends_on = [helm_release.postgres_operator]
+
+  name      = "postgres-toolbox"
+  chart     = "./charts/postgres-toolbox"
+  namespace = var.project_namespace
+  values    = [templatefile("./charts/postgres-toolbox-values.yaml", { name = var.name })]
 
 }

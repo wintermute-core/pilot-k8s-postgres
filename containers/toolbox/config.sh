@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-export TAG=0.0.1
+export TAG=0.0.2
