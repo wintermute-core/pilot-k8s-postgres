@@ -3,6 +3,8 @@ replicaCount: 1
 clusterRoleName: "cluster-admin"
 serviceAccountSecret: "service-account-key"
 
+serviceAccountKey: "service-account-key"
+
 image:
   repository: "denis256/toolbox"
   tag: "0.0.1"

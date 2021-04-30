@@ -25,6 +25,10 @@ spec:
       serviceAccountName: {{ include "postgres-toolbox.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: key-volume
+          secret:
+            secretName: {{ .Values.serviceAccountKey }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -37,12 +41,27 @@ spec:
             - | 
               set -eu -o pipefail
               set -x
+              gcloud auth activate-service-account --key-file /etc/google/security/*.json
+
+              export DB_NAME=potato666
+              export DB_USER=potatouser
+              export DB_PW=potato123
+              
+              cat > ~/.pgpass <<EOF
+              *:*:${DB_NAME}:${DB_USER}:${DB_PW}
+              EOF
+              chmod 0600 ~/.pgpass
+              export PGPASSFILE=~/.pgpass
+
 
               echo "Toolbox container, login with kubectl to operate"
               
               tail -f /dev/null
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/google/security
+              name: key-volume
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

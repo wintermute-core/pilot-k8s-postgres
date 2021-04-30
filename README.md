@@ -54,6 +54,26 @@ pgo -n pgo delete cluster potato666
 
 ```
 
+# Postgres toolbox
+
+Container running in same namespace with DB contaianing tools to interact with the db
+
+Login into toolbox pod:
+```
+kubectl -n pgo exec -it deploy/postgres-toolbox -- bash
+```
+
+Access postgres toolbox
+```
+psql -h potato666-pgbouncer  -U potatouser potato666
+
+pg_dump -h potato666-pgbouncer  -U potatouser potato666 > dump.sql
+
+gsutil cp dump.sql gs://gke-postgres-backups
+
+```
+
+
 # References
 
 https://registry.terraform.io/modules/terraform-google-modules/kubernetes-engine/google/latest
