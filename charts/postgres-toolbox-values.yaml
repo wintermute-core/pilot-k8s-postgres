@@ -1,3 +1,11 @@
- image:
+image:
   repository: "denis256/toolbox"
   tag: "0.0.2"
+
+db:
+  name: "${db_name}"
+  user: "${db_user}"
+  password: "${db_password}"
+  gs_backup_bucket: "${gs_backup_bucket}"
+
+

@@ -11,6 +11,12 @@ image:
   pullPolicy: IfNotPresent
 
 
+db:
+  name: "testdb"
+  user: "user"
+  password: "pw"
+  gs_backup_bucket: "tomato-gs"
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""

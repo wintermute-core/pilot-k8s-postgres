@@ -10,10 +10,39 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: {{ include "postgres-init.serviceAccountName" . }}
+      volumes:
+        - name: db-dumps
+          configMap:
+            name: {{ .Release.Name }}-db-dump
       containers:
         - name: db-creation
           image: {{ .Values.dbCreation.image.repository }}:{{ .Values.dbCreation.image.tag }}
           imagePullPolicy: {{ .Values.dbCreation.image.pullPolicy }}
+          env:
+            - name: DUMP_FILES
+              value: "/db-dumps/*"
+            - name: DB_NS
+              value: "pgo"
+            - name: PGPASSFILE
+              value: "~/.pgpass"
+            - name: DB_CLUSRER_NAME
+              value: "{{ .Values.db.name }}"
+            - name: DB_NAME
+              value: "{{ .Values.db.name }}"
+            - name: PG_REPLICAS
+              value: "{{ .Values.db.replicas }}"
+            - name: PGBOUNCER_REPLICAS
+              value: "{{ .Values.db.lb_replicas }}"
+            - name: "DB_USER"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-db-secret
+                  key: db_user
+            - name: "DB_PW"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-db-secret
+                  key: db_password
           command:
             - "bash"
             - "-c"
@@ -21,13 +50,13 @@ spec:
               set -eu -o pipefail
               set -x
 
-              export DB_NS=pgo
-              export DB_CLUSRER_NAME=potato666
-              export DB_NAME=potato666
-              export DB_USER=potatouser
-              export DB_PW=potato123
-              export PG_REPLICAS=3
-              export PGBOUNCER_REPLICAS=2
+              export PG_SERVICE="${DB_CLUSRER_NAME}-pgbouncer"
+
+              cat > ~/.pgpass <<EOF
+              *:*:${DB_NAME}:${DB_USER}:${DB_PW}
+              EOF
+              chmod 0600 ~/.pgpass
+              export PGPASSFILE=~/.pgpass
 
               function pgo_client_is_ready() {
                 kubectl -n pgo get pod -lname=pgo-client -ojson | jq '.items[].status | select(.containerStatuses != null) | .containerStatuses[] | select(.name=="pgo") | .ready' | grep --silent true
@@ -64,11 +93,39 @@ spec:
                 echo "Cluster ${DB_CLUSRER_NAME} created"
               }
 
+              function is_db_ready() {
+                pg_isready -h "${PG_SERVICE}" | grep --silent "accepting connections"
+              }
+
+              function check_db() {
+                time_left=600
+                until is_db_ready; do
+                  if [[ time_left -lt 0 ]]; then
+                    echo "DB not ready, quit..."
+                    exit 1
+                  fi
+                  time_left=$((time_left - 5))
+                  echo "waiting ${time_left} for DB"
+                  sleep 5
+                done
+                echo "db is ready"
+              }
+
               wait_for_pgo_client_ready
               create_pgo_cluster
 
+              check_db
+              
+              for f in $DUMP_FILES; do
+                echo "Processing ${f} file..."
+                psql -h "${PG_SERVICE}" -U "${DB_USER}" "${DB_NAME}" < "${f}"
+              done
+
           resources:
             {{- toYaml .Values.dbCreation.resources | nindent 12 }}
+          volumeMounts:
+            - name: db-dumps
+              mountPath: "/db-dumps"
       {{- with .Values.dbCreation.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}

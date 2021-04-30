@@ -43,3 +43,18 @@ variable "postgres_operator_namespace" {
   default = "postgres-operator"
 }
 
+variable "db_name" {
+  default = "potato666"
+}
+
+variable "db_user" {
+  default = "potatouser"
+}
+
+variable "db_password" {
+  default = "potato123"
+}
+
+variable "gs_backup_bucket" {
+  default = "gke-postgres-backups"
+}

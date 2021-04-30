@@ -4,8 +4,7 @@
 set -eu -o pipefail
 set -x
 
-cat > ~/.pgpass <<EOF
+cat > /root/.pgpass <<EOF
 *:*:${DB_NAME}:${DB_USER}:${DB_PW}
 EOF
-chmod 0600 ~/.pgpass
-export PGPASSFILE=~/.pgpass
+chmod 0600 /root/.pgpass

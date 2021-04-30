@@ -3,9 +3,7 @@ dbCreation:
     repository: "denis256/toolbox"
     tag: "0.0.2"
 
-
-dbInit:
-  image:
-    repository: "denis256/toolbox"
-    tag: "0.0.2"
-
+db:
+  name: "${db_name}"
+  user: "${db_user}"
+  password: "${db_password}"

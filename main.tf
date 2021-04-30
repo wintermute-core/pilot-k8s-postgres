@@ -107,11 +107,9 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(
     data.google_container_cluster.gke.master_auth[0].cluster_ca_certificate,
   )
-
 }
 
 provider "helm" {
-
   kubernetes {
     host  = "https://${data.google_container_cluster.gke.endpoint}"
     token = data.google_client_config.provider.access_token
@@ -150,33 +148,44 @@ resource "helm_release" "postgres_operator" {
   chart     = "./charts/postgres-operator"
   namespace = data.kubernetes_namespace.operator_namespace.metadata[0].name
   values    = [templatefile("./charts/postgres-operator-values.yaml", { name = var.name })]
-
 }
 
 resource "helm_release" "postgres_init" {
   depends_on = [helm_release.postgres_operator]
 
-  name      = "postgres-init"
-  chart     = "./charts/postgres-init"
+  name  = "postgres-init"
+  chart = "./charts/postgres-init"
+  create_namespace = true
   namespace = var.project_namespace
-  values    = [templatefile("./charts/postgres-init-values.yaml", { name = var.name })]
+  values = [templatefile("./charts/postgres-init-values.yaml", {
+    name        = var.name,
+    db_name     = var.db_name,
+    db_user     = var.db_user
+    db_password = var.db_password
+  })]
 
 }
 
 resource "null_resource" "gcp_account_secret" {
   depends_on = [helm_release.postgres_init]
-  
+
   provisioner "local-exec" {
     command = "./scrips/load-default-secret.sh ${var.project_namespace}"
   }
 }
 
 resource "helm_release" "postgres_toolbox" {
-  depends_on = [helm_release.postgres_operator]
+  depends_on = [null_resource.gcp_account_secret, helm_release.postgres_init]
 
   name      = "postgres-toolbox"
   chart     = "./charts/postgres-toolbox"
   namespace = var.project_namespace
-  values    = [templatefile("./charts/postgres-toolbox-values.yaml", { name = var.name })]
+  values = [templatefile("./charts/postgres-toolbox-values.yaml", {
+    name             = var.name,
+    db_name          = var.db_name,
+    db_user          = var.db_user
+    db_password      = var.db_password,
+    gs_backup_bucket = var.gs_backup_bucket
+  })]
 
 }

@@ -29,31 +29,42 @@ spec:
         - name: key-volume
           secret:
             secretName: {{ .Values.serviceAccountKey }}
+        - name: toolbox-scripts
+          configMap:
+            name: {{ .Release.Name }}-scripts
+            defaultMode: 0777
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PGPASSFILE
+              value: "/root/.pgpass"
+            - name: DB_CLUSRER_NAME
+              value: "{{ .Values.db.name }}"
+            - name: DB_NAME
+              value: "{{ .Values.db.name }}"
+            - name: GS_BUCKET
+              value: "{{ .Values.db.gs_backup_bucket }}"
+            - name: "DB_USER"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-db-secret
+                  key: db_user
+            - name: "DB_PW"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-db-secret
+                  key: db_password
           command:
             - "bash"
             - "-c"
             - | 
-              set -eu -o pipefail
-              set -x
-              gcloud auth activate-service-account --key-file /etc/google/security/*.json
-
-              export DB_NAME=potato666
-              export DB_USER=potatouser
-              export DB_PW=potato123
+              /scripts/gcp-login.sh
+              /scripts/gen-pg-config.sh
               
-              cat > ~/.pgpass <<EOF
-              *:*:${DB_NAME}:${DB_USER}:${DB_PW}
-              EOF
-              chmod 0600 ~/.pgpass
-              export PGPASSFILE=~/.pgpass
-
-
               echo "Toolbox container, login with kubectl to operate"
               
               tail -f /dev/null
@@ -62,6 +73,8 @@ spec:
           volumeMounts:
             - mountPath: /etc/google/security
               name: key-volume
+            - mountPath: /scripts
+              name: toolbox-scripts
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

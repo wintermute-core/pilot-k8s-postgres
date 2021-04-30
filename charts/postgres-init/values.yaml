@@ -1,26 +1,16 @@
-# Default values for postgres-init.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 replicaCount: 1
 
-image:
-  repository: nginx
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+db:
+  name: "testdb"
+  user: "user"
+  password: "pw"
+  replicas: 3
+  lb_replicas: 2
+
 
 dbCreation:
   image:
     repository: "bskim45/helm-kubectl-jq"
-    tag: "potato"
-    pullPolicy: IfNotPresent
-  resources: {}
-  tolerations: []
-
-dbInit:
-  image:
-    repository: "denis256/pg-client"
     tag: "potato"
     pullPolicy: IfNotPresent
   resources: {}
@@ -53,8 +43,6 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
-
-
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
