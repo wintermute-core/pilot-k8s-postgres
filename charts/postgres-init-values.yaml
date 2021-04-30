@@ -1,12 +1,11 @@
 dbCreation:
   image:
-    repository: "bitnami/kubectl"
-    tag: "1.17.17-debian-10-r98"
-    pullPolicy: IfNotPresent
+    repository: "denis256/toolbox"
+    tag: "0.0.1"
 
 
 dbInit:
   image:
-    repository: "denis256/pg-client"
+    repository: "denis256/toolbox"
     tag: "0.0.1"
 
