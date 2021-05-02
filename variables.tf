@@ -63,10 +63,6 @@ variable "db_password" {
   default = "potato123"
 }
 
-variable "gs_backup_bucket" {
-  default = "gke-postgres-backups"
-}
-
 variable "db_backup_schedule" {
   default = "*/30 * * * *"
 }

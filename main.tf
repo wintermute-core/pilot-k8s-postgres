@@ -8,6 +8,7 @@ provider "google" {
   zone    = var.zone
 }
 
+data "google_client_config" "provider" {}
 
 resource "google_container_cluster" "gke" {
   name               = var.name
@@ -85,6 +86,10 @@ resource "google_container_node_pool" "pg_pool" {
   }
 }
 
+resource "google_storage_bucket" "backups_bucket" {
+  name     = "${var.name}-db-backups"
+  location = var.region
+}
 
 resource "null_resource" "fetch_cluster_details" {
   depends_on = [google_container_node_pool.pg_pool]
@@ -93,7 +98,7 @@ resource "null_resource" "fetch_cluster_details" {
   }
 }
 
-data "google_client_config" "provider" {}
+
 
 data "google_container_cluster" "gke" {
   depends_on = [google_container_node_pool.pg_pool]
@@ -177,7 +182,7 @@ resource "null_resource" "gcp_account_secret" {
 }
 
 resource "helm_release" "postgres_toolbox" {
-  depends_on = [null_resource.gcp_account_secret, helm_release.postgres_init]
+  depends_on = [null_resource.gcp_account_secret, helm_release.postgres_init, google_storage_bucket.backups_bucket]
 
   name      = "postgres-toolbox"
   chart     = "./charts/postgres-toolbox"
@@ -187,7 +192,7 @@ resource "helm_release" "postgres_toolbox" {
     db_name            = var.db_name,
     db_user            = var.db_user
     db_password        = var.db_password,
-    gs_backup_bucket   = var.gs_backup_bucket,
+    gs_backup_bucket   = "${var.name}-db-backups",
     db_backup_schedule = var.db_backup_schedule
   })]
 
