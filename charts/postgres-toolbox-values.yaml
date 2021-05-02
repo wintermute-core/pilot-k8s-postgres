@@ -1,6 +1,6 @@
 image:
-  repository: "denis256/toolbox"
-  tag: "0.0.2"
+  repository: "${image_toolbox_repository}"
+  tag: "${image_toolbox_tag}"
 
 db:
   name: "${db_name}"
@@ -11,6 +11,6 @@ db:
 
 cronjob:
   image:
-    repository: "denis256/toolbox"
-    tag: "0.0.2"
+    repository: "${image_toolbox_repository}"
+    tag: "${image_toolbox_tag}"
   schedule: "${db_backup_schedule}"

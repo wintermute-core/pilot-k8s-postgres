@@ -39,11 +39,11 @@ resource "google_container_node_pool" "default_pool" {
   version    = local.gke_version
 
   node_config {
-    preemptible  = true
+    preemptible  = var.gke_preemptible
     machine_type = var.default_machine_type
 
     metadata = {
-      disable-legacy-endpoints = "true"
+      disable-legacy-endpoints = true
     }
 
     oauth_scopes = [
@@ -67,11 +67,11 @@ resource "google_container_node_pool" "pg_pool" {
   version    = local.gke_version
 
   node_config {
-    preemptible  = true
+    preemptible  = var.gke_preemptible
     machine_type = var.pg_machine_type
 
     metadata = {
-      disable-legacy-endpoints = "true"
+      disable-legacy-endpoints = true
     }
 
     oauth_scopes = [
@@ -87,8 +87,13 @@ resource "google_container_node_pool" "pg_pool" {
 }
 
 resource "google_storage_bucket" "backups_bucket" {
-  name     = "${var.name}-db-backups"
-  location = var.region
+  name          = "${var.name}-db-backups"
+  location      = var.region
+  force_destroy = true
+  labels = {
+    app  = "postgres_demo"
+    pool = "pg_pool"
+  }
 }
 
 resource "null_resource" "fetch_cluster_details" {
@@ -138,6 +143,7 @@ resource "kubernetes_namespace" "create_operator_namespace" {
   }
 }
 
+
 data "kubernetes_namespace" "operator_namespace" {
   depends_on = [kubernetes_namespace.create_operator_namespace]
 
@@ -163,12 +169,14 @@ resource "helm_release" "postgres_init" {
   create_namespace = true
   namespace        = var.project_namespace
   values = [templatefile("./charts/postgres-init-values.yaml", {
-    name         = var.name,
-    db_name      = var.db_name,
-    db_user      = var.db_user
-    db_password  = var.db_password,
-    db_replicas  = var.db_replicas,
-    db_pgbouncer = var.db_pgbouncer
+    name                     = var.name,
+    image_toolbox_repository = var.image_toolbox_repository,
+    image_toolbox_tag        = var.image_toolbox_tag,
+    db_name                  = var.db_name,
+    db_user                  = var.db_user
+    db_password              = var.db_password,
+    db_replicas              = var.db_replicas,
+    db_pgbouncer             = var.db_pgbouncer
   })]
 
 }
@@ -188,12 +196,14 @@ resource "helm_release" "postgres_toolbox" {
   chart     = "./charts/postgres-toolbox"
   namespace = var.project_namespace
   values = [templatefile("./charts/postgres-toolbox-values.yaml", {
-    name               = var.name,
-    db_name            = var.db_name,
-    db_user            = var.db_user
-    db_password        = var.db_password,
-    gs_backup_bucket   = "${var.name}-db-backups",
-    db_backup_schedule = var.db_backup_schedule
+    name                     = var.name,
+    image_toolbox_repository = var.image_toolbox_repository,
+    image_toolbox_tag        = var.image_toolbox_tag,
+    db_name                  = var.db_name,
+    db_user                  = var.db_user
+    db_password              = var.db_password,
+    gs_backup_bucket         = "${var.name}-db-backups",
+    db_backup_schedule       = var.db_backup_schedule
   })]
 
 }

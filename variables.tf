@@ -3,7 +3,8 @@ variable "name" {
 }
 
 variable "project" {
-  default = "universal-development-dev"
+  default = "gentle-cable-224311"
+  //universal-development-dev
 }
 
 variable "region" {
@@ -18,12 +19,16 @@ variable "gke_location" {
   default = "us-central1-a"
 }
 
+variable "gke_preemptible" {
+  default = true
+}
+
 variable "default_node_count" {
-  default = 1
+  default = 2
 }
 
 variable "pg_node_count" {
-  default = 2
+  default = 3
 }
 
 variable "default_machine_type" {
@@ -65,4 +70,12 @@ variable "db_password" {
 
 variable "db_backup_schedule" {
   default = "*/30 * * * *"
+}
+
+variable "image_toolbox_repository" {
+  default = "denis256/toolbox"
+}
+
+variable "image_toolbox_tag" {
+  default = "0.0.2"
 }
