@@ -32,7 +32,7 @@ spec:
             - name: PG_REPLICAS
               value: "{{ .Values.db.replicas }}"
             - name: PGBOUNCER_REPLICAS
-              value: "{{ .Values.db.lb_replicas }}"
+              value: "{{ .Values.db.pgbouncer }}"
             - name: "DB_USER"
               valueFrom:
                 secretKeyRef:

@@ -153,15 +153,17 @@ resource "helm_release" "postgres_operator" {
 resource "helm_release" "postgres_init" {
   depends_on = [helm_release.postgres_operator]
 
-  name  = "postgres-init"
-  chart = "./charts/postgres-init"
+  name             = "postgres-init"
+  chart            = "./charts/postgres-init"
   create_namespace = true
-  namespace = var.project_namespace
+  namespace        = var.project_namespace
   values = [templatefile("./charts/postgres-init-values.yaml", {
-    name        = var.name,
-    db_name     = var.db_name,
-    db_user     = var.db_user
-    db_password = var.db_password
+    name         = var.name,
+    db_name      = var.db_name,
+    db_user      = var.db_user
+    db_password  = var.db_password,
+    db_replicas  = var.db_replicas,
+    db_pgbouncer = var.db_pgbouncer
   })]
 
 }
@@ -181,11 +183,12 @@ resource "helm_release" "postgres_toolbox" {
   chart     = "./charts/postgres-toolbox"
   namespace = var.project_namespace
   values = [templatefile("./charts/postgres-toolbox-values.yaml", {
-    name             = var.name,
-    db_name          = var.db_name,
-    db_user          = var.db_user
-    db_password      = var.db_password,
-    gs_backup_bucket = var.gs_backup_bucket
+    name               = var.name,
+    db_name            = var.db_name,
+    db_user            = var.db_user
+    db_password        = var.db_password,
+    gs_backup_bucket   = var.gs_backup_bucket,
+    db_backup_schedule = var.db_backup_schedule
   })]
 
 }

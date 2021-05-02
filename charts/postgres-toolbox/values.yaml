@@ -11,6 +11,19 @@ image:
   pullPolicy: IfNotPresent
 
 
+cronjob:
+  image:
+    repository: "denis256/toolbox"
+    tag: "0.0.1"
+    pullPolicy: IfNotPresent
+  schedule: "0 */30 * * *"
+  startingDeadlineSeconds: 400
+  annotations: {}
+  concurrencyPolicy: ""
+  failedJobsHistoryLimit: ""
+  successfulJobsHistoryLimit: ""
+
+
 db:
   name: "testdb"
   user: "user"

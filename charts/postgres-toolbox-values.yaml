@@ -9,3 +9,8 @@ db:
   gs_backup_bucket: "${gs_backup_bucket}"
 
 
+cronjob:
+  image:
+    repository: "denis256/toolbox"
+    tag: "0.0.2"
+  schedule: "${db_backup_schedule}"

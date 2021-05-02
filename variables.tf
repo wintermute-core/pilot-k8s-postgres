@@ -47,6 +47,14 @@ variable "db_name" {
   default = "potato666"
 }
 
+variable "db_replicas" {
+  default = "3"
+}
+
+variable "db_pgbouncer" {
+  default = "2"
+}
+
 variable "db_user" {
   default = "potatouser"
 }
@@ -57,4 +65,8 @@ variable "db_password" {
 
 variable "gs_backup_bucket" {
   default = "gke-postgres-backups"
+}
+
+variable "db_backup_schedule" {
+  default = "*/30 * * * *"
 }

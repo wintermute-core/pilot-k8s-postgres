@@ -5,7 +5,7 @@ db:
   user: "user"
   password: "pw"
   replicas: 3
-  lb_replicas: 2
+  pgbouncer: 2
 
 
 dbCreation:
