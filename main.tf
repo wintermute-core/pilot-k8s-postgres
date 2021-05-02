@@ -83,6 +83,12 @@ resource "google_container_node_pool" "pg_pool" {
       app  = "postgres_demo"
       pool = "pg_pool"
     }
+    taint = [{
+      key    = "app"
+      value  = "postgres"
+      effect = "NO_SCHEDULE"
+      }
+    ]
   }
 }
 
@@ -104,7 +110,6 @@ resource "null_resource" "fetch_cluster_details" {
 }
 
 
-
 data "google_container_cluster" "gke" {
   depends_on = [google_container_node_pool.pg_pool]
   name       = var.name
@@ -112,14 +117,16 @@ data "google_container_cluster" "gke" {
 }
 
 provider "kubernetes" {
-  host  = "https://${data.google_container_cluster.gke.endpoint}"
-  token = data.google_client_config.provider.access_token
+  
+  host             = "https://${data.google_container_cluster.gke.endpoint}"
+  token            = data.google_client_config.provider.access_token
   cluster_ca_certificate = base64decode(
     data.google_container_cluster.gke.master_auth[0].cluster_ca_certificate,
   )
 }
 
 provider "helm" {
+
   kubernetes {
     host  = "https://${data.google_container_cluster.gke.endpoint}"
     token = data.google_client_config.provider.access_token
@@ -130,6 +137,7 @@ provider "helm" {
 }
 
 resource "kubernetes_namespace" "create_operator_namespace" {
+
   metadata {
     annotations = {
       name = var.postgres_operator_namespace

@@ -2,6 +2,9 @@ dbCreation:
   image:
     repository: "${image_toolbox_repository}"
     tag: "${image_toolbox_tag}"
+  tolerations:
+    - key: app
+      value: postgres
 
 db:
   name: "${db_name}"
@@ -9,3 +12,6 @@ db:
   password: "${db_password}"
   replicas: "${db_replicas}"
   pgbouncer: "${db_pgbouncer}"
+  tolerations:
+    - key: app
+      value: postgres

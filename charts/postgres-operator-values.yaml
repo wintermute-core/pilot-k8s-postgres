@@ -6,3 +6,7 @@ rbac:
 
 pgo_client_container_install: "true"
 pgo_cluster_admin: "true"
+
+tolerations:
+  - key: app
+    value: postgres

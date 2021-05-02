@@ -14,3 +14,8 @@ cronjob:
     repository: "${image_toolbox_repository}"
     tag: "${image_toolbox_tag}"
   schedule: "${db_backup_schedule}"
+
+tolerations:
+  - key: app
+    value: postgres
+

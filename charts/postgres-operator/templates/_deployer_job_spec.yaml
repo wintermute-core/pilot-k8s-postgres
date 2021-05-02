@@ -9,6 +9,10 @@ spec:
     spec:
       serviceAccountName: {{ include "postgres-operator.serviceAccountName" . }}
       restartPolicy: Never
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: pgo-deploy
         image: {{ .Values.pgo_image_prefix }}/pgo-deployer:{{ .Values.pgo_image_tag }}

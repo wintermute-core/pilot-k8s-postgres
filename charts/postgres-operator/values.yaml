@@ -18,6 +18,8 @@ serviceAccount:
     # serviceAccount.name: The name of the Service Account to create or use
     name: ""
 
+tolerations: []
+
 # =====================
 # Configuration Options
 # More info for these options can be found in the docs
