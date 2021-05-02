@@ -1,0 +1,91 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "postgres-toolbox.fullname" . }}-backup-job
+  labels:
+    {{- include "postgres-toolbox.labels" . | nindent 4 }}
+spec:
+  schedule: "{{ .Values.cronjob.schedule }}"
+  startingDeadlineSeconds: {{ .Values.cronjob.startingDeadlineSeconds }}
+  {{- with .Values.cronjob.concurrencyPolicy }}
+  concurrencyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.cronjob.failedJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.cronjob.successfulJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ . }}
+  {{- end }}
+  jobTemplate:
+    metadata:
+      labels:
+        app: {{ template "postgres-toolbox.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ template "postgres-toolbox.name" . }}
+            release: {{ .Release.Name }}
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ include "postgres-toolbox.serviceAccountName" . }}
+          volumes:
+            - name: key-volume
+              secret:
+                secretName: {{ .Values.serviceAccountKey }}
+            - name: toolbox-scripts
+              configMap:
+                name: {{ .Release.Name }}-scripts
+                defaultMode: 0777
+          containers:
+            - name: backup
+              image: "{{ .Values.cronjob.image.repository }}:{{ .Values.cronjob.image.tag }}"
+              imagePullPolicy: {{ .Values.cronjob.image.pullPolicy }}
+              env:
+                - name: PGPASSFILE
+                  value: "/root/.pgpass"
+                - name: DB_CLUSRER_NAME
+                  value: "{{ .Values.db.name }}"
+                - name: DB_NAME
+                  value: "{{ .Values.db.name }}"
+                - name: GS_BUCKET
+                  value: "{{ .Values.db.gs_backup_bucket }}"
+                - name: "DB_USER"
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Release.Name }}-db-secret
+                      key: db_user
+                - name: "DB_PW"
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Release.Name }}-db-secret
+                      key: db_password
+              command:
+                - "bash"
+                - "-c"
+                - |
+                  set -eu -o pipefail
+                  set -x
+                  /scripts/gcp-login.sh
+                  /scripts/gen-pg-config.sh
+                  /scripts/backup-db.sh
+              resources:
+{{ toYaml .Values.resources | indent 16 }}
+              volumeMounts:
+                - mountPath: /etc/google/security
+                  name: key-volume
+                - mountPath: /scripts
+                  name: toolbox-scripts
+        {{- with .Values.nodeSelector }}
+          nodeSelector:
+{{ toYaml . | indent 12 }}
+        {{- end }}
+        {{- with .Values.affinity }}
+          affinity:
+{{ toYaml . | indent 12 }}
+        {{- end }}
+        {{- with .Values.tolerations }}
+          tolerations:
+{{ toYaml . | indent 12 }}
+        {{- end }}
