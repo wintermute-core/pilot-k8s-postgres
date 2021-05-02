@@ -1,0 +1,5 @@
+spec:
+  tolerations:
+    - key: app
+      value: postgres
+      effect: "NoSchedule"

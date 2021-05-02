@@ -88,7 +88,7 @@ spec:
                 kubectl -n pgo exec deploy/pgo-client -- pgo -n "${DB_NS}" create cluster ${DB_CLUSRER_NAME} \
                   --replica-count=${PG_REPLICAS} --password-superuser="${DB_PW}" \
                   --pgbouncer --pgbouncer-replicas=${PGBOUNCER_REPLICAS} --username=${DB_USER} --password=${DB_PW} \
-                  ${resources_args} \
+                  ${resources_args} --pod-anti-affinity=required --pod-anti-affinity-pgbackrest=required --pod-anti-affinity-pgbouncer=required --toleration=app=postgres:NoSchedule \
                   --metrics
                 echo "Cluster ${DB_CLUSRER_NAME} created"
               }
