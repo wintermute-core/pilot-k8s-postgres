@@ -12,8 +12,11 @@
 # Repository structure
 
 `*.tf` - terraform files for GKE deployment
+
 `charts` - directory with helm charts used in installation
+
 `containers` - directory used to build container images
+
 `scripts` - scripts used in environment provisioning
 
 # Workflows
@@ -22,7 +25,7 @@
 
 * GCP account + project
 
-* gcloud, kubectl and helm installed
+* gcloud, kubectl(1.14+) and helm(v3) installed
 
 * gcloud initialized and set to GCP project
 
@@ -32,12 +35,16 @@
 
 ## Deployment
 
+Review `versions.tf` for provider and terraform versions
 
 Initialize terraform providers
 ```
 terraform init
 ```
-Environment deployment
+
+Review `variables.tf` for default values.
+
+Environment deployment:
 
 ```
 terraform plan
