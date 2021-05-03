@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "postgres-init.fullname" . }}
+  name: {{ include "postgres-init.fullname" . }}-db-patch
   labels:
     {{- include "postgres-init.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 0
   selector:
     matchLabels:
       {{- include "postgres-init.selectorLabels" . | nindent 6 }}
@@ -26,9 +26,6 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
-        - name: key-volume
-          secret:
-            secretName: {{ .Values.serviceAccountKey }}
         - name: scripts
           configMap:
             name: {{ .Release.Name }}-scripts
@@ -37,9 +34,8 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-
+          image: "{{ .Values.dbCreation.image.repository }}:{{ .Values.dbCreation.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.dbCreation.image.pullPolicy }}
           command:
             - "bash"
             - "-c"

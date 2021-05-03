@@ -36,7 +36,7 @@ variable "default_machine_type" {
 }
 
 variable "pg_machine_type" {
-  default = "n1-standard-1"
+  default = "n1-standard-2"
 }
 
 variable "project_namespace" {
@@ -53,11 +53,11 @@ variable "db_name" {
 }
 
 variable "db_replicas" {
-  default = "3"
+  default = "2"
 }
 
 variable "db_pgbouncer" {
-  default = "2"
+  default = "1"
 }
 
 variable "db_user" {

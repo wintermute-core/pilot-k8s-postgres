@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Script to generate postgresql passowrd file to avoid interactive ask
 
 set -eu -o pipefail

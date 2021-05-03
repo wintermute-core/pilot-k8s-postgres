@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Backup postgresql DB and copy to GS
 
 set -eu -o pipefail

@@ -5,6 +5,7 @@ dbCreation:
   tolerations:
     - key: app
       value: postgres
+      effect: "NoSchedule"
 
 db:
   name: "${db_name}"
@@ -15,3 +16,9 @@ db:
   tolerations:
     - key: app
       value: postgres
+      effect: "NoSchedule"
+
+tolerations:
+  - key: app
+    value: postgres
+    effect: "NoSchedule"

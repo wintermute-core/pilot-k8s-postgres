@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Script to login to GCP using service account file
 
 set -eu -o pipefail
