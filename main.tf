@@ -35,12 +35,12 @@ resource "google_container_node_pool" "default_pool" {
   project    = var.project
   location   = var.gke_location
   cluster    = google_container_cluster.gke.name
-  node_count = var.default_node_count
+  node_count = var.gke_default_node_count
   version    = local.gke_version
 
   node_config {
     preemptible  = var.gke_preemptible
-    machine_type = var.default_machine_type
+    machine_type = var.gke_default_machine_type
 
     metadata = {
       disable-legacy-endpoints = true
@@ -63,12 +63,12 @@ resource "google_container_node_pool" "pg_pool" {
   project    = var.project
   location   = var.gke_location
   cluster    = google_container_cluster.gke.name
-  node_count = var.pg_node_count
+  node_count = var.gke_pg_node_count
   version    = local.gke_version
 
   node_config {
     preemptible  = var.gke_preemptible
-    machine_type = var.pg_machine_type
+    machine_type = var.gke_pg_machine_type
 
     metadata = {
       disable-legacy-endpoints = true
@@ -117,9 +117,9 @@ data "google_container_cluster" "gke" {
 }
 
 provider "kubernetes" {
-  
-  host             = "https://${data.google_container_cluster.gke.endpoint}"
-  token            = data.google_client_config.provider.access_token
+
+  host  = "https://${data.google_container_cluster.gke.endpoint}"
+  token = data.google_client_config.provider.access_token
   cluster_ca_certificate = base64decode(
     data.google_container_cluster.gke.master_auth[0].cluster_ca_certificate,
   )

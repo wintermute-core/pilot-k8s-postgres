@@ -9,54 +9,76 @@
 * helm
 * PGO - CrunchyData postgres operator 
 
-# Structure
+# Repository structure
 
 `*.tf` - terraform files for GKE deployment
 `charts` - directory with helm charts used in installation
 `containers` - directory used to build container images
+`scripts` - scripts used in environment provisioning
 
-# Deployment steps
+# Workflows
 
-Initialize terraform
+## Prerequisites
+
+* GCP account + project
+
+* gcloud, kubectl and helm installed
+
+* gcloud initialized and set to GCP project
+
+* Envrionmen variable `GOOGLE_APPLICATION_CREDENTIALS` pointing to service account credentials file
+
+* Service account with role `roles/container.admin`
+
+## Deployment
+
+
+Initialize terraform providers
 ```
 terraform init
 ```
+Environment deployment
 
-Apply changes
 ```
 terraform plan
 
 terraform apply
 ```
+## Accesing postgresql
 
-Destroy environment
-```
-terraform destroy
-```
+Postgresql will be deployed in namespace `pgo`, through `pgo-client` pod can be accessed postgres operator,
+through `postgres-toolbox` interaction with postgres can be done.
 
-# Postgres operator interactions
 
-After deployment, in namespace `pgo` will be deployed 2 pods:
- * `pgo-client` - client to interact with operator
- * `postgres-operator` - postgres operator application
+## Postgres operator interactions
 
-To interact wtih operator should be used client application `pgo` available in `pgo-client` pod or can be used from local(with port forwarding)
+Through `pgo-client` can be obtained information about postgres cluster, deployed new clusters, scaled environments etc.
+
+To interact wtih operator should be used client application `pgo` on pod or can be used from local(with port forwarding)
 
 ```
+kubectl -n pgo exec -it deploy/pgo-client -- bash
 
+```
+
+Example commands:
+```
 pgo version
 
-pgo create cluster -n pgo potato
+pgo -n pgo  show cluster potato666
 
-pgo create cluster -n pgo tomato --replica-count=3 --password-superuser=potatoinc --pgbouncer --pgbouncer-replicas=3 --node-label pool=pg_pool
+pgo  -n pgo create cluster tomato123
 
-pgo -n pgo delete cluster potato666
+pgo -n pgo delete cluster potato123
 
 ```
 
-# Postgres toolbox
+https://access.crunchydata.com/documentation/postgres-operator/4.6.2/pgo-client/common-tasks/
 
-Container running in same namespace with DB contaianing tools to interact with the db
+## Postgres toolbox
+
+Through `postgres-toolbox` can be accessed postgresql db, can be executed on demand DB backup, 
+also can be executed manually restore of previous dump since pod has activated GCP service account.
 
 Login into toolbox pod:
 ```
@@ -67,11 +89,57 @@ Access postgres toolbox
 ```
 psql -h potato666-pgbouncer  -U potatouser potato666
 
-pg_dump -h potato666-pgbouncer  -U potatouser potato666 > dump.sql
+\dt
+select * from sales;
+select * from customers;
 
+
+Manual backup operations:
+pg_dump -h potato666-pgbouncer  -U potatouser potato666 > dump.sql
 gsutil cp dump.sql gs://gke-postgres-backups
 
 ```
+
+## Backup
+
+Backups automatically executed by a K8S cron job with configurable schedule, 
+db backups are automatically uploaded to created GS bucket, name containing year month day hour minute second of backup.
+
+Manual backups are also supported, by executing `/scripts/backup-db.sh` on toolbox container.
+
+Note: backups are done in SQL format
+
+## Destroy
+
+Commands to be executed in order to destroy created environment
+
+```
+terraform destroy
+```
+
+# Future work
+
+Since this is a POC project, it has room for improvements in directions like:
+ * Terraform modular split:
+   * modules(s) for platform like GKE, GS setup;
+   * module(s) for applications deployment;
+ * GKE deployment: 
+   * deploy in non default networks;
+   * deploy private nodes without external IPs;
+ * Security improvements:
+   * special service account for accessing GCP resources from pods;
+   * run as non root in containers;
+   * special role only with requied permissions;
+ * Postgres Operator:
+   * definition of requests and limits for pods(now disabled to save costs)
+   * configurable db storage size;
+   * backup/restore using PGO client;
+   * configuration of TLS connectivity;
+   * usage of monitoring metrics;
+   * automated scripts for DB restore;
+ * Postgres DB setup:
+   * usage of external DB dump(current approach will be limited to 1MB which can fit in ConfigMap);
+   * db metrics exporting;
 
 
 # References
@@ -82,4 +150,7 @@ https://github.com/terraform-google-modules/terraform-google-kubernetes-engine
 
 https://github.com/CrunchyData/postgres-operator
 
+# License
+
+Only for reference, distribution and/or commercial usage not allowed
 
